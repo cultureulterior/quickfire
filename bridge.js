@@ -15,13 +15,6 @@ var dataChannelSettings = {
         ordered: false,
         maxRetransmits: 0
       },
-  /*
-  'reliable': {},
-  '@control': {
-        outOfOrderAllowed: true,
-        maxRetransmitNum: 0
-      }
-  */
 };
 
 var pendingDataChannels = {};
@@ -40,9 +33,11 @@ var app = http.createServer(function (req, res) {
       }).resume();
 }).listen(port, host);
 
-console.log('Server running at http://' + host + ':' + port + '/');
+var ip = require('os').networkInterfaces()["eth0"].filter(function(x){return x['family'] && x['family']=="IPv4"})[0]["address"]
+console.log('Server running at http://' + ip + ':' + port + '/');
 
 var wss = new ws.Server({'server': app, 'path':"/ws"});
+
 wss.on('connection', function(ws)
 {
   console.info('ws connected');
