@@ -18,5 +18,8 @@
   "license": "AGPL",
   "bugs": {
     "url": "https://github.com/cultureulterior/quickfire/issues"
+  },
+  "dependencies": {
+    "wrtc": "0.0.20"
   }
 }
