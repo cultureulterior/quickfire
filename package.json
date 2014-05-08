@@ -1,0 +1,22 @@
+{
+  "name": "quickfire",
+  "version": "0.0.0",
+  "description": "Game library for low-latency unreliable webrtc transport",
+  "main": "index.js",
+  "scripts": {
+    "test": "test.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:cultureulterior/quickfire.git"
+  },
+  "keywords": [
+    "webrtc",
+    "game"
+  ],
+  "author": "Samuel Kleiner",
+  "license": "AGPL",
+  "bugs": {
+    "url": "https://github.com/cultureulterior/quickfire/issues"
+  }
+}
