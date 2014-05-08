@@ -12,14 +12,7 @@ var dataChannelSettings = {
         maxRetransmitNum: 0,
         ordered:false,
         maxRetransmits:0
-      },
- 
-//  'reliable': {},
-//  '@control': {
-//        outOfOrderAllowed: true,
-//        maxRetransmitNum: 0
-//      }
- 
+      }
 };
 
 var pendingDataChannels = {};
@@ -32,13 +25,16 @@ function doHandleError(error)
 }
 
 var packets=0;
+var last_packets={};
 var rec_packets=0;
-var time =new Date()
 
 function orbit()
 {
   packets += 1;
-  time = new Date()
+  last_packets[""+packets] = window.performance.now()
+  if(Object.keys(last_packets).length > 20){
+      delete last_packets[Math.min.apply(null, last_packets)]
+  }
   dataChannels['reliable'].send(JSON.stringify({"client_packets":packets}));
 }
 
@@ -115,12 +111,15 @@ function doCreateDataChannels()
       var data = event.data;
       if('string' == typeof data) {        
 	obj = JSON.parse(data)
-	rec_packets +=1
-	document.getElementById("server_packets").innerHTML = rec_packets 
-        document.getElementById("client_packets").innerHTML = packets
-        document.getElementById("diff_packets").innerHTML = rec_packets/packets 
-	document.getElementById("latency").innerHTML = Math.abs(time - (new Date()))
-	//console.log(obj,time,packets)
+	  rec_packets +=1
+          document.getElementById("diff_packets").textContent = ((1.0 - rec_packets/packets)*100.0).toFixed(3)
+	  var last = last_packets[obj["client_packets"]]
+	  if(last){
+              document.getElementById("latency").textContent = (window.performance.now() - last).toFixed(3)
+	  } else {
+	      document.getElementById("latency").textContent = "TOO LONG"
+	  }
+	  //console.log(obj,time,packets)
       } else {
         console.log('onmessage:', new Uint8Array(data));
       }

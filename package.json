@@ -2,7 +2,7 @@
   "name": "quickfire",
   "version": "0.0.0",
   "description": "Game library for low-latency unreliable webrtc transport",
-  "main": "index.js",
+  "main": "lib/index.js",
   "scripts": {
     "test": "test.js"
   },
