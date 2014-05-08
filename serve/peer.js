@@ -1,7 +1,6 @@
 (function() {
 
-var host = window.location.host.split(':')[0];
-var bridge = window.location.toString().split('?')[1] || host + ':9001';
+var bridge = window.location.host + "/ws"
 
 var RTCPeerConnection     = wrtc.RTCPeerConnection;
 var RTCSessionDescription = wrtc.RTCSessionDescription;

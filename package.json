@@ -20,6 +20,10 @@
     "url": "https://github.com/cultureulterior/quickfire/issues"
   },
   "dependencies": {
-    "wrtc": "0.0.20"
+    "wrtc": "0.0.20",
+    "ws": "~0.4.31",
+    "node-static": "~0.7.3",
+    "node-static-alias": "~0.1.0",
+    "minimist": "0.0.8"
   }
 }

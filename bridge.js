@@ -30,7 +30,7 @@ var pendingCandidates = [];
 
 var host = args.h || '0.0.0.0';
 var port = args.p || 80;
-var socketPort = args.ws || 9001;
+
 
 var file = new static.Server('./serve')
 var app = http.createServer(function (req, res) {
@@ -42,7 +42,7 @@ var app = http.createServer(function (req, res) {
 
 console.log('Server running at http://' + host + ':' + port + '/');
 
-var wss = new ws.Server({'port': 9001});
+var wss = new ws.Server({'server': app, 'path':"/ws"});
 wss.on('connection', function(ws)
 {
   console.info('ws connected');
