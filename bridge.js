@@ -9,10 +9,7 @@ var store = new session.MemoryStore({ reapInterval: 60000 * 10 });
 
 var args = require('minimist')(process.argv.slice(2));
 var MAX_REQUEST_LENGHT = 1024;
-var pc = null;
-var offer = null;
-var answer = null;
-var remoteReceived = false;
+
 
 var dataChannelSettings = {
   'reliable': {
@@ -20,10 +17,6 @@ var dataChannelSettings = {
         maxRetransmits: 0
       },
 };
-
-var pendingDataChannels = {};
-var dataChannels = {}
-var pendingCandidates = [];
 
 var host = args.h || '0.0.0.0';
 var port = args.p || 80;
@@ -76,22 +69,27 @@ console.log('Server running at http://' + ip + ':' + port + '/');
 
 var wss = new ws.Server({'server': server, 'path':"/ws"});
 
+var channel_by_id={};
+
 wss.on('connection', function(ws)
 {
+    var pc = null;
+    var offer = null;
+    var answer = null;
+    var remoteReceived = false;
+    var pendingDataChannels = {};
+    var dataChannels = {}
+    var pendingCandidates = [];
+
   console.info('ws connected',ws.upgradeReq.headers.cookie);
- 
+
+    var session_id;
   Cookie_parser(ws.upgradeReq, null, function(err) {
       console.log("parsed cookies",ws.upgradeReq.signedCookies)
-      var sessionID = ws.upgradeReq.signedCookies['sid'];
-      store.get(sessionID, function(err, sess) {
+      session_id = ws.upgradeReq.signedCookies['sid'];
+      store.get(session_id, function(err, sess) {
 	  console.log("Session:",sess);
       });
-      //var sessionID = ws.upgradeReq.headers.cookie['sid'];
-      //console.log("sessionid",sessionID);
-      //store.get(sessionID, function(err, session) {
-      //    console.log("session",session);
-      //      // session
-      //});
   }); 
 
   function doComplete()
@@ -151,10 +149,12 @@ wss.on('connection', function(ws)
         dataChannels[label] = channel;
         delete pendingDataChannels[label];
         if(Object.keys(dataChannels).length === labels.length) {
-          doComplete();
+            doComplete();
+	    channel_by_id[session_id] = dataChannels['reliable'];
+	    console.log("Negotiation completed, set of channels",Object.keys(channel_by_id))
         }
       };
-      channel.onmessage = function(evt) {
+      channel.onmessage = function(evt) {	
         var data = evt.data;
         //console.log('onmessage:', evt.data);
         if('string' == typeof data) {
@@ -167,7 +167,10 @@ wss.on('connection', function(ws)
 	    } else if(obj.t==="u")
 	    {
 		console.log("Game data update",obj)
-	    } else 
+		obj["id"]=session_id;
+		var to_send = JSON.stringify({"t":"u","d":obj})
+		Object.keys(channel_by_id).forEach(function(k){channel_by_id[k].send(to_send)})
+	    } else
 	    {
 		console.log("Unknown packet type",obj)
 	    }
