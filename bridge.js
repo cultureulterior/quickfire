@@ -1,4 +1,3 @@
-//var static = require('node-static-alias');
 var http = require('http');
 var webrtc = require('wrtc');
 var ws = require('ws');
@@ -31,27 +30,38 @@ var port = args.p || 80;
 var app = express();
 var server = http.createServer(app);
 
-
 var ip;
 var configuration={};
 try {
-  ip = require('os').networkInterfaces()["eth0"].filter(function(x){return x['family'] && x['family']=="IPv4"})[0]["address"]
-  var ip2 = require('os').networkInterfaces()["eth0:0"].filter(function(x){return x['family'] && x['family']=="IPv4"})[0]["address"]
-  var stun = require('stunsrv');
-  var stunserver = stun.createServer();
-  stunserver.setAddress0(ip);
-  stunserver.setAddress1(ip2);
-  stunserver.setPort0(81);
-  stunserver.setPort1(82);
-  configuration.stunserver=ip+":"+81
-  stunserver.listen();
-  console.log("IP1:",ip,"IP2:",ip2)
+  var ifs= require('os').networkInterfaces()
+  var ips =Object.keys(ifs).map(function(i){return ifs[i].filter(function(x){return x['family'] && x['family']=="IPv4" && !require('ip').isPrivate(x['address'])}).map(function(x){return x["address"]})}).reduce(function(a, b) {return a.concat(b);})
+  if (ips.length>1)
+    {
+	console.log("More than one ips",ips,"creating stun server")
+	ip = ips[0]
+	var stun = require('stunsrv');
+	var stunserver = stun.createServer();
+	stunserver.setAddress0(ips[0]);
+	stunserver.setAddress1(ips[1]);
+	stunserver.setPort0(81);
+	stunserver.setPort1(82);
+	configuration.stunserver=ip+":"+81
+	stunserver.listen();
+	console.log("IP1:",ips[0],"IP2:",ips[1])
+    }
+  else
+    {
+	console.log("WARNING: Less than 2 public ip addresses configured, using google's stun server")
+	configuration.stunserver = "stun.l.google.com:19302"
+    }
 } catch (err) {
     console.log(err)
-  ip = "0.0.0.0"
+    ip = "0.0.0.0"
 }
 
-app.use(cookie_parser("vurble"))
+var Cookie_parser = cookie_parser("vurble")
+
+app.use(Cookie_parser)
 app.use(session({ store: store, secret: '123456', key: 'sid' }));
 app.enable("jsonp callback");
 app.get('/configure', function(req, res){ 
@@ -67,14 +77,20 @@ var wss = new ws.Server({'server': server, 'path':"/ws"});
 
 wss.on('connection', function(ws)
 {
-  console.info('ws connected',ws.upgradeReq.headers.cookie['sid']);
-  cookie_parser(ws.upgradeReq, null, function(err) {
-      var sessionID = ws.upgradeReq.headers.cookie['sid'];
-      console.log("sessionid",sessionID);
-      store.get(sessionID, function(err, session) {
-          console.log("session",session);
-            // session
-      });
+  //parsed_cookie = cookie.parse(transport.upgradeReq.headers.cookie);
+  //parsedCookie = connect.utils.parseJSONCookies(connect.utils.parseSignedCookies(sessionCookie, wss.session['secret']))['express.sid'];
+  //signed_cookie = connect.utils.parseSignedCookies(parsed_cookies)
+  console.info('ws connected',ws.upgradeReq.headers.cookie);
+ 
+  Cookie_parser(ws.upgradeReq, null, function(err) {
+      var sessionID = ws.upgradeReq.signedCookies['sid'];
+      console.log("sessionID",sessionID)
+      //var sessionID = ws.upgradeReq.headers.cookie['sid'];
+      //console.log("sessionid",sessionID);
+      //store.get(sessionID, function(err, session) {
+      //    console.log("session",session);
+      //      // session
+      //});
   }); 
 //  console.log(cookie_parser.signedCookies(ws.upgradeReq.cookies))
 //, null, function(err) {
