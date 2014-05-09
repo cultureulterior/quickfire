@@ -84,11 +84,13 @@ wss.on('connection', function(ws)
   console.info('ws connected',ws.upgradeReq.headers.cookie);
 
     var session_id;
+    var session;
   Cookie_parser(ws.upgradeReq, null, function(err) {
       console.log("parsed cookies",ws.upgradeReq.signedCookies)
       session_id = ws.upgradeReq.signedCookies['sid'];
       store.get(session_id, function(err, sess) {
 	  console.log("Session:",sess);
+	  session = sess;
       });
   }); 
 
@@ -168,8 +170,12 @@ wss.on('connection', function(ws)
 	    {
 		console.log("Game data update",obj)
 		obj["id"]=session_id;
+		obj["name"]=session.name;
 		var to_send = JSON.stringify({"t":"u","d":obj})
 		Object.keys(channel_by_id).forEach(function(k){channel_by_id[k].send(to_send)})
+	    } else if(obj.t==="n")
+	    {
+		session.name = obj.n;
 	    } else
 	    {
 		console.log("Unknown packet type",obj)

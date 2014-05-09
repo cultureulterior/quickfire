@@ -26,10 +26,10 @@ configuration.update_data = function(data){
 }
 function redraw(){
     Object.keys(id_to_circle).forEach(function(i){
-	draw_circle(id_to_circle[i]["x"],id_to_circle[i]["y"])
+	draw_circle(id_to_circle[i]["x"],id_to_circle[i]["y"],id_to_circle[i]["name"])
     })
 }				    
-function draw_circle(lox,loy){ 
+function draw_circle(lox,loy,name){ 
     context.strokeStyle = '#003300';
     context.lineWidth = 5;
     context.lineJoin = 'miter'
@@ -39,6 +39,11 @@ function draw_circle(lox,loy){
     context.stroke();
     context.font = '30pt Calibri';
     context.textAlign = 'center';
-    //context.fillText('SK',lox,loy+12);
+    context.fillText((""+name).slice(0,2),lox,loy+12);
 }
+document.getElementById("name_input").addEventListener('input',function(ev){
+    console.log("setting name to",ev.target.value)
+    configuration.channel.send(JSON.stringify({"t":"n","n":ev.target.value}))
+},false);
+document.getElementById("name_input").value=configuration.name || "  "
 resizeCanvas();
