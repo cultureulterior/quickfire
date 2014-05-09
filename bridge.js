@@ -4,7 +4,7 @@ var ws = require('ws');
 var express = require('express');
 var cookie_parser = require('cookie-parser');
 var session = require('express-session')
-var store = new session.MemoryStore();
+var store = new session.MemoryStore({ reapInterval: 60000 * 10 });
 
 var args = require('minimist')(process.argv.slice(2));
 var MAX_REQUEST_LENGHT = 1024;
@@ -33,8 +33,8 @@ var server = http.createServer(app);
 var ip;
 var configuration={};
 try {
-  var ifs= require('os').networkInterfaces()
-  var ips =Object.keys(ifs).map(function(i){return ifs[i].filter(function(x){return x['family'] && x['family']=="IPv4" && !require('ip').isPrivate(x['address'])}).map(function(x){return x["address"]})}).reduce(function(a, b) {return a.concat(b);})
+  var ifs = require('os').networkInterfaces()
+  var ips = Object.keys(ifs).map(function(i){return ifs[i].filter(function(x){return x['family'] && x['family']=="IPv4" && !require('ip').isPrivate(x['address'])}).map(function(x){return x["address"]})}).reduce(function(a, b) {return a.concat(b);})
   if (ips.length>1)
     {
 	console.log("More than one ips",ips,"creating stun server")
@@ -62,7 +62,7 @@ try {
 var Cookie_parser = cookie_parser("vurble")
 
 app.use(Cookie_parser)
-app.use(session({ store: store, secret: '123456', key: 'sid' }));
+app.use(session({ store: store, secret: 'vurble', key: 'sid' }));
 app.enable("jsonp callback");
 app.get('/configure', function(req, res){ 
   // important - you have to use the response.json method
@@ -77,14 +77,14 @@ var wss = new ws.Server({'server': server, 'path':"/ws"});
 
 wss.on('connection', function(ws)
 {
-  //parsed_cookie = cookie.parse(transport.upgradeReq.headers.cookie);
-  //parsedCookie = connect.utils.parseJSONCookies(connect.utils.parseSignedCookies(sessionCookie, wss.session['secret']))['express.sid'];
-  //signed_cookie = connect.utils.parseSignedCookies(parsed_cookies)
   console.info('ws connected',ws.upgradeReq.headers.cookie);
  
   Cookie_parser(ws.upgradeReq, null, function(err) {
+      console.log("parsed cookies",ws.upgradeReq.signedCookies)
       var sessionID = ws.upgradeReq.signedCookies['sid'];
-      console.log("sessionID",sessionID)
+      store.get(sessionID, function(err, sess) {
+	  console.log("Session:",sess);
+      });
       //var sessionID = ws.upgradeReq.headers.cookie['sid'];
       //console.log("sessionid",sessionID);
       //store.get(sessionID, function(err, session) {
@@ -92,14 +92,6 @@ wss.on('connection', function(ws)
       //      // session
       //});
   }); 
-//  console.log(cookie_parser.signedCookies(ws.upgradeReq.cookies))
-//, null, function(err) {
-//      var sessionID = ws.upgradeReq.cookies['sid'];
-//      console.info(sessionID);
-      //store.get(sessionID, function(err, session) {
-          // session
-      //});
-//  });
 
   function doComplete()
   {
