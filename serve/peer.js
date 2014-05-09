@@ -93,6 +93,7 @@ pc.onicecandidate = function(event)
 };
 
 doCreateDataChannels();
+latency = 100;
 
 function doCreateDataChannels()
 {
@@ -117,8 +118,10 @@ function doCreateDataChannels()
           document.getElementById("diff_packets").textContent = ((1.0 - rec_packets/packets)*100.0).toFixed(3)
 	  var last = last_packets[obj["client_packets"]]
 	  if(last){
-              document.getElementById("latency").textContent = (window.performance.now() - last).toFixed(3)
+	      latency = (window.performance.now() - last)
+              document.getElementById("latency").textContent = latency.toFixed(3)
 	  } else {
+	      latency = 100;
 	      document.getElementById("latency").textContent = "TOO LONG"
 	  }
 	  //console.log(obj,time,packets)
