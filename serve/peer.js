@@ -139,7 +139,8 @@ function doCreateDataChannels()
 	      }
 	  } else if(obj.t=="u")
 	  {
-	      configuration.game_data = obj["data"]
+	      console.log("Game data arrived",obj)
+	      configuration.update_data(obj)
 	  } else { console.log("Unknown packet type",obj)}
 	  //console.log(obj,time,packets)
       } else {
