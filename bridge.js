@@ -32,20 +32,8 @@ var app = express();
 var server = http.createServer(app);
 
 
-app.use(cookie_parser("vurble"))
-app.use(session({ store: store, secret: '123456', key: 'sid' }));
-app.use(express.static(__dirname + '/serve'));
-
-//var file = new static.Server('./serve')
-//var app = http.createServer(function (req, res) {
-//    console.log(req.url);
-//    req.addListener('end', function() {
-//        file.serve(req, res);
-//      }).resume();
-//})
-server.listen(port, host);
-
 var ip;
+var configuration={};
 try {
   ip = require('os').networkInterfaces()["eth0"].filter(function(x){return x['family'] && x['family']=="IPv4"})[0]["address"]
   var ip2 = require('os').networkInterfaces()["eth0:0"].filter(function(x){return x['family'] && x['family']=="IPv4"})[0]["address"]
@@ -55,6 +43,7 @@ try {
   stunserver.setAddress1(ip2);
   stunserver.setPort0(81);
   stunserver.setPort1(82);
+  configuration.stunserver=ip+":"+81
   stunserver.listen();
   console.log("IP1:",ip,"IP2:",ip2)
 } catch (err) {
@@ -62,6 +51,16 @@ try {
   ip = "0.0.0.0"
 }
 
+app.use(cookie_parser("vurble"))
+app.use(session({ store: store, secret: '123456', key: 'sid' }));
+app.enable("jsonp callback");
+app.get('/configure', function(req, res){ 
+  // important - you have to use the response.json method
+    res.jsonp(configuration);
+});
+app.use(express.static(__dirname + '/serve'));
+
+server.listen(port, host);
 console.log('Server running at http://' + ip + ':' + port + '/');
 
 var wss = new ws.Server({'server': server, 'path':"/ws"});

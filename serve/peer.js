@@ -55,7 +55,8 @@ function doWaitforDataChannels()
 var ws = null;
 var pc = new RTCPeerConnection(
   {
-    iceServers: [{url:'stun:176.58.96.186:81'}]
+      iceServers: [{url:('stun:'+configuration.stunserver)}]
+    // iceServers: [{url:'stun:176.58.96.186:81'}]
     // iceServers: [{url:'stun:stun.l.google.com:19302'}]
   },
   {
