@@ -96,6 +96,9 @@ pc.onicecandidate = function(event)
 doCreateDataChannels();
 configuration.latency = 100;
 
+function sgn(x) { return x ? x < 0 ? -1 : 1 : 0; }
+
+
 function doCreateDataChannels()
 {
   var labels = Object.keys(dataChannelSettings);
@@ -112,6 +115,7 @@ function doCreateDataChannels()
       }
     };
     channel.onmessage = function(event) {
+      var rcpt = window.performance.now()
       var data = event.data;
       if('string' == typeof data) {        
 	obj = JSON.parse(data)
@@ -120,9 +124,15 @@ function doCreateDataChannels()
 	      rec_packets +=1
               document.getElementById("diff_packets").textContent = ((1.0 - rec_packets/packets)*100.0).toFixed(3)
 	      var last = last_packets[obj["client_packets"]]
-	      if(last){
-		  configuration.latency = (window.performance.now() - last)
-		  document.getElementById("latency").textContent = configuration.latency.toFixed(3)
+	      if(last){		  
+		  configuration.latency = (rcpt - last)
+		  if(configuration.latency_est)
+		  {  // Median estimator
+		      configuration.latency_est += 0.1 * sgn(configuration.latency - configuration.latency_est )
+		  } else { configuration.latency_est = configuration.latency }
+		  configuration.time_offset = obj["server_time"] - rcpt + (configuration.latency_est / 2.0);
+		  document.getElementById("latency").textContent = configuration.latency_est.toFixed(3)
+		  document.getElementById("time_offset").textContent = configuration.time_offset.toFixed(3)
 	      } else {
 		  configuration.latency = 100;
 		  document.getElementById("latency").textContent = "TOO LONG"
