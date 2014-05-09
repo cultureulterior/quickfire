@@ -1,7 +1,11 @@
-var static = require('node-static-alias');
+//var static = require('node-static-alias');
 var http = require('http');
 var webrtc = require('wrtc');
 var ws = require('ws');
+var express = require('express');
+var cookie_parser = require('cookie-parser');
+var session = require('express-session')
+var store = new session.MemoryStore();
 
 var args = require('minimist')(process.argv.slice(2));
 var MAX_REQUEST_LENGHT = 1024;
@@ -24,23 +28,64 @@ var pendingCandidates = [];
 var host = args.h || '0.0.0.0';
 var port = args.p || 80;
 
+var app = express();
+var server = http.createServer(app);
 
-var file = new static.Server('./serve')
-var app = http.createServer(function (req, res) {
-    console.log(req.url);
-    req.addListener('end', function() {
-        file.serve(req, res);
-      }).resume();
-}).listen(port, host);
 
-var ip = require('os').networkInterfaces()["eth0"].filter(function(x){return x['family'] && x['family']=="IPv4"})[0]["address"]
+app.use(cookie_parser("vurble"))
+app.use(session({ store: store, secret: '123456', key: 'sid' }));
+app.use(express.static(__dirname + '/serve'));
+
+//var file = new static.Server('./serve')
+//var app = http.createServer(function (req, res) {
+//    console.log(req.url);
+//    req.addListener('end', function() {
+//        file.serve(req, res);
+//      }).resume();
+//})
+server.listen(port, host);
+
+var ip;
+try {
+  ip = require('os').networkInterfaces()["eth0"].filter(function(x){return x['family'] && x['family']=="IPv4"})[0]["address"]
+  var ip2 = require('os').networkInterfaces()["eth0:0"].filter(function(x){return x['family'] && x['family']=="IPv4"})[0]["address"]
+  var stun = require('stunsrv');
+  var stunserver = stun.createServer();
+  stunserver.setAddress0(ip);
+  stunserver.setAddress1(ip2);
+  stunserver.setPort0(81);
+  stunserver.setPort1(82);
+  stunserver.listen();
+  console.log("IP1:",ip,"IP2:",ip2)
+} catch (err) {
+    console.log(err)
+  ip = "0.0.0.0"
+}
+
 console.log('Server running at http://' + ip + ':' + port + '/');
 
-var wss = new ws.Server({'server': app, 'path':"/ws"});
+var wss = new ws.Server({'server': server, 'path':"/ws"});
 
 wss.on('connection', function(ws)
 {
-  console.info('ws connected');
+  console.info('ws connected',ws.upgradeReq.headers.cookie['sid']);
+  cookie_parser(ws.upgradeReq, null, function(err) {
+      var sessionID = ws.upgradeReq.headers.cookie['sid'];
+      console.log("sessionid",sessionID);
+      store.get(sessionID, function(err, session) {
+          console.log("session",session);
+            // session
+      });
+  }); 
+//  console.log(cookie_parser.signedCookies(ws.upgradeReq.cookies))
+//, null, function(err) {
+//      var sessionID = ws.upgradeReq.cookies['sid'];
+//      console.info(sessionID);
+      //store.get(sessionID, function(err, session) {
+          // session
+      //});
+//  });
+
   function doComplete()
   {
     console.info('complete');

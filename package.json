@@ -24,6 +24,10 @@
     "ws": "~0.4.31",
     "node-static": "~0.7.3",
     "node-static-alias": "~0.1.0",
-    "minimist": "0.0.8"
+    "minimist": "0.0.8",
+    "express": "~4.1.1",
+    "cookie-parser": "~1.0.1",
+    "express-session": "~1.0.4",
+    "stunsrv": "0.0.2"
   }
 }
