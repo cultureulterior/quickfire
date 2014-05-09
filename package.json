@@ -29,6 +29,7 @@
     "cookie-parser": "~1.0.1",
     "express-session": "~1.0.4",
     "stunsrv": "0.0.2",
-    "ip": "~0.3.0"
+    "ip": "~0.3.0",
+    "performance-now": "~0.1.3"
   }
 }

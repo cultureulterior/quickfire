@@ -4,6 +4,7 @@ var ws = require('ws');
 var express = require('express');
 var cookie_parser = require('cookie-parser');
 var session = require('express-session')
+var now = require('performance-now')
 var store = new session.MemoryStore({ reapInterval: 60000 * 10 });
 
 var args = require('minimist')(process.argv.slice(2));
@@ -159,8 +160,17 @@ wss.on('connection', function(ws)
         if('string' == typeof data) {
 	  packets +=1;
 	  obj = JSON.parse(data)
-	  obj["server_packets"]=packets
-          channel.send(JSON.stringify(obj))
+	    if(obj.t==="p") {
+		obj["server_packets"]=packets
+		obj["server_time"]=now()
+		channel.send(JSON.stringify(obj))		
+	    } else if(obj.t==="u")
+	    {
+		console.log("Game data update",obj)
+	    } else 
+	    {
+		console.log("Unknown packet type",obj)
+	    }
         } else {
           var response = new Uint8Array([107, 99, 97, 0]);
           channel.send(response.buffer);

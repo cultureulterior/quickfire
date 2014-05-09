@@ -9,11 +9,12 @@ function resizeCanvas() {
     redraw(); 
 }
 function click(evt) {
+    configuration.channel.send(JSON.stringify({"t":"u","d":{"x":evt.clientX,"y":evt.clientY}}));
     setTimeout(function(){
 	lox=evt.clientX;
 	loy=evt.clientY;
 	resizeCanvas();
-    },latency)
+    },configuration.latency/2.0)
 }
 function redraw(){ 
     context.strokeStyle = '#003300';

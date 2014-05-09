@@ -35,12 +35,13 @@ function orbit()
   if(Object.keys(last_packets).length > 20){
       delete last_packets[Math.min.apply(null, last_packets)]
   }
-  dataChannels['reliable'].send(JSON.stringify({"client_packets":packets}));
+  dataChannels['reliable'].send(JSON.stringify({"t":"p","client_packets":packets}));
 }
 
 function doComplete()
 {
   console.log('complete');
+  configuration.channel = dataChannels['reliable']
   //var data = new Uint8Array([97, 99, 107, 0]);
   //dataChannels['reliable'].send(data.buffer);
   //dataChannels['reliable'].send("WARLORD");
@@ -93,7 +94,7 @@ pc.onicecandidate = function(event)
 };
 
 doCreateDataChannels();
-latency = 100;
+configuration.latency = 100;
 
 function doCreateDataChannels()
 {
@@ -114,16 +115,22 @@ function doCreateDataChannels()
       var data = event.data;
       if('string' == typeof data) {        
 	obj = JSON.parse(data)
-	  rec_packets +=1
-          document.getElementById("diff_packets").textContent = ((1.0 - rec_packets/packets)*100.0).toFixed(3)
-	  var last = last_packets[obj["client_packets"]]
-	  if(last){
-	      latency = (window.performance.now() - last)
-              document.getElementById("latency").textContent = latency.toFixed(3)
-	  } else {
-	      latency = 100;
-	      document.getElementById("latency").textContent = "TOO LONG"
-	  }
+	if(obj.t==="p")
+	  {
+	      rec_packets +=1
+              document.getElementById("diff_packets").textContent = ((1.0 - rec_packets/packets)*100.0).toFixed(3)
+	      var last = last_packets[obj["client_packets"]]
+	      if(last){
+		  configuration.latency = (window.performance.now() - last)
+		  document.getElementById("latency").textContent = configuration.latency.toFixed(3)
+	      } else {
+		  configuration.latency = 100;
+		  document.getElementById("latency").textContent = "TOO LONG"
+	      }
+	  } else if(obj.t=="u")
+	  {
+	      configuration.game_data = obj["data"]
+	  } else { console.log("Unknown packet type",obj)}
 	  //console.log(obj,time,packets)
       } else {
         console.log('onmessage:', new Uint8Array(data));
