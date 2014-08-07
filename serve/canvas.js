@@ -39,11 +39,14 @@ function draw_circle(lox,loy,name){
     context.stroke();
     context.font = '30pt Calibri';
     context.textAlign = 'center';
-    context.fillText((""+name).slice(0,2),lox,loy+12);
+    context.fillText((name||"").slice(0,2),lox,loy+12);
 }
 document.getElementById("name_input").addEventListener('input',function(ev){
     console.log("setting name to",ev.target.value)
     configuration.channel.send(JSON.stringify({"t":"n","n":ev.target.value}))
 },false);
-document.getElementById("name_input").value=configuration.name || "  "
+if(configuration.name)
+{
+    document.getElementById("name_input").value=configuration.name
+}
 resizeCanvas();

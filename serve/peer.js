@@ -67,14 +67,20 @@ var pc = new RTCPeerConnection(
 pc.onsignalingstatechange = function(event)
 {
   console.info("signaling state change: ", event.target.signalingState);
+  
 };
 pc.oniceconnectionstatechange = function(event)
 {
   console.info("ice connection state change: ", event.target.iceConnectionState);
+    if(event.target.iceConnectionState==="disconnected")
+    {
+	doSendOffer()
+    }
 };
 pc.onicegatheringstatechange = function(event)
 {
   console.info("ice gathering state change: ", event.target.iceGatheringState);
+
 };
 pc.onicecandidate = function(event)
 {
